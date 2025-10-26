@@ -28,15 +28,18 @@ body {
     text-align: center;
 }
 
-/* SETUP VIEW STYLES */
+/* SETUP VIEW STYLES - FIX: Use space-evenly to manage vertical space and prevent button from being hidden */
 .setup-view {
-    justify-content: flex-start;
-    padding-top: 5vh;
+    justify-content: space-evenly; /* Spreads elements evenly vertically */
+    padding-top: 0; /* Remove unnecessary top padding */
+    height: 100vh; /* Ensure it occupies full viewport height */
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .title {
     font-size: 2em;
-    margin-bottom: 40px;
+    margin-bottom: 20px; /* Reduced from 40px to save space */
     color: #4CAF50; /* Green accent */
 }
 
@@ -118,7 +121,7 @@ body {
 }
 
 
-/* START BUTTON */
+/* START BUTTON - FIX: Reduced margin to fit better in space-evenly layout */
 .btn-start {
     background-color: #4CAF50; /* Green */
     color: #121212;
@@ -128,7 +131,7 @@ body {
     font-weight: bold;
     border-radius: 15px;
     cursor: pointer;
-    margin-top: 30px;
+    margin-top: 20px; /* Reduced from 30px */
     transition: background-color 0.2s;
     width: 80%;
     max-width: 350px;

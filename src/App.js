@@ -35,10 +35,10 @@ const playHighPitchedNoise = () => {
     }
 };
 
-// --- HORIZONTAL SCROLL INPUT COMPONENT ---
+// --- HORIZONTAL SCROLL INPUT COMPONENT (FIX APPLIED HERE) ---
 const HorizontalScrollInput = React.memo(({ label, value, max, increment, min, onChange }) => {
     const wheelRef = useRef(null);
-    const itemWidth = 80; // Must match CSS -- this is the size of each number block
+    const itemWidth = 80; // Must match CSS
     const maxIndex = Math.floor((max - min) / increment);
     
     // Generate all possible values for the wheel
@@ -50,10 +50,14 @@ const HorizontalScrollInput = React.memo(({ label, value, max, increment, min, o
     // Effect to set the initial scroll position correctly on load/value change
     useEffect(() => {
         if (wheelRef.current) {
-            // Set scrollLeft to center the current value. We offset by half the viewport width 
-            // to make sure the centered item is selected.
-            const scrollCenter = (currentIndex * itemWidth) - (wheelRef.current.offsetWidth / 2) + (itemWidth / 2);
-            wheelRef.current.scrollLeft = scrollCenter;
+            // Calculate the position required to center the item (currentIndex)
+            const scrollCenter = (currentIndex * itemWidth);
+            
+            // Calculate the offset needed to center the item in the scroll window
+            const offset = (wheelRef.current.offsetWidth / 2) - (itemWidth / 2);
+            
+            // Set the scroll position
+            wheelRef.current.scrollLeft = scrollCenter - offset;
         }
     }, [currentIndex, items.length, min, increment]);
 
@@ -66,14 +70,20 @@ const HorizontalScrollInput = React.memo(({ label, value, max, increment, min, o
             const element = wheelRef.current;
             if (!element) return;
 
-            // Calculate which item is closest to the center of the viewport
-            // Total scroll + half viewport - half item width
-            const scrollCenter = element.scrollLeft + (element.offsetWidth / 2);
-            const nearestIndex = Math.round(scrollCenter / itemWidth) - 1; // -1 to account for padding/alignment
-
-            let newIndex = Math.max(0, Math.min(maxIndex, nearestIndex));
+            // --- FIX: Correct calculation for centered scroll-snap index ---
             
-            // Calculate the actual value
+            // 1. Get the current scrollLeft position
+            const scrollLeft = element.scrollLeft;
+
+            // 2. Calculate the index: scroll position / item width. 
+            // We use itemWidth (80) which is the distance between snap points.
+            // We round the result to find the index of the nearest snapped item.
+            const rawIndex = Math.round(scrollLeft / itemWidth);
+            
+            // 3. Clamp the index between 0 and maxIndex
+            let newIndex = Math.max(0, Math.min(maxIndex, rawIndex));
+            
+            // 4. Calculate the actual value based on the new index
             const newValue = min + newIndex * increment;
 
             if (newValue !== value) {
@@ -194,11 +204,10 @@ function App() {
     
     const createSettingsSetter = useCallback((key) => {
         return (newVal) => {
+            // The ScrollInput directly passes the final value, so we use the non-function update path
             if (typeof newVal === 'function') {
-                // This path is no longer needed with ScrollInput but kept as safeguard
                 setSettings(prev => ({...prev, [key]: newVal(prev[key])}));
             } else {
-                // The ScrollInput directly passes the final value, so we use this path
                 setSettings(prev => ({...prev, [key]: newVal}));
             }
         };

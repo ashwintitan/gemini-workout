@@ -52,6 +52,11 @@ body {
     display: block;
     margin-bottom: 0.5rem;
     font-weight: bold;
+    font-size: 1rem;
+    text-align: center;
+    white-space: normal;
+    word-break: break-word;
+    max-width: 100%;
 }
 .scroll-container {
     background-color: #1e1e1e;
@@ -67,14 +72,10 @@ body {
 .scroll-wheel-horizontal {
     display: flex;
     overflow-x: scroll;
-    -webkit-overflow-scrolling: touch;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
-    align-items: center;
-    height: 80px;
-    padding: 0;
-}
-
+    scroll-behavior: smooth;
+    width: 100%;
+    -ms-overflow-style: none;  /* IE & Edge */
+    scrollbar-width: none;      /* Firefox */
 /* Hide scrollbar for Webkit browsers (Chrome, Safari) */
 .scroll-wheel-horizontal::-webkit-scrollbar {
     display: none;

@@ -1,9 +1,7 @@
-// App.js
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import HorizontalScrollInput from './HorizontalScrollInput'; // NEW
+import HorizontalScrollInput from './HorizontalScrollInput';
 import './index.css';
 
-// --- CONFIGURATION ---
 const MAX_ROUNDS = 15;
 const MAX_TIME = 120;
 const WORK_INCREMENT = 15;
@@ -18,7 +16,6 @@ const WORKOUT_STATES = {
     COMPLETE: 'COMPLETE'
 };
 
-// --- HELPER FUNCTIONS ---
 const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -35,7 +32,6 @@ const playHighPitchedNoise = () => {
     }
 };
 
-// --- MAIN APP ---
 function App() {
     const [settings, setSettings] = useState({ rounds: 5, workTime: 60, restTime: 30 });
     const [timerState, setTimerState] = useState(WORKOUT_STATES.SETUP);
@@ -110,7 +106,7 @@ function App() {
     if (timerState === WORKOUT_STATES.SETUP) {
         return (
             <div className="app setup-view">
-                <h1 className="title">Interval Timer Setup</h1>
+                <h1 className="title">Interval Timer</h1>
 
                 <HorizontalScrollInput
                     label="Rounds"
@@ -122,7 +118,7 @@ function App() {
                 />
 
                 <HorizontalScrollInput
-                    label={`Work Time (${WORK_INCREMENT}s intervals)`}
+                    label={`Work Time (${WORK_INCREMENT}s)`}
                     value={settings.workTime}
                     min={WORK_INCREMENT}
                     max={MAX_TIME}
@@ -131,7 +127,7 @@ function App() {
                 />
 
                 <HorizontalScrollInput
-                    label={`Rest Time (${REST_INCREMENT}s intervals)`}
+                    label={`Rest Time (${REST_INCREMENT}s)`}
                     value={settings.restTime}
                     min={REST_INCREMENT}
                     max={MAX_TIME}
@@ -139,7 +135,7 @@ function App() {
                     onChange={createSettingsSetter('restTime')}
                 />
 
-                <button 
+                <button
                     className="btn-start"
                     onClick={startWorkout}
                     disabled={settings.rounds < 1 || settings.workTime < WORK_INCREMENT}

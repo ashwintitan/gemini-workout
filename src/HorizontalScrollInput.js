@@ -8,7 +8,6 @@ const HorizontalScrollInput = React.memo(({ label, value, min, max, increment, o
     const maxIndex = Math.floor((max - min) / increment);
     const items = Array.from({ length: maxIndex + 1 }, (_, i) => min + i * increment);
 
-    // Dynamic item width
     useEffect(() => {
         const calculateWidth = () => {
             if (wheelRef.current) {
@@ -21,7 +20,6 @@ const HorizontalScrollInput = React.memo(({ label, value, min, max, increment, o
         return () => window.removeEventListener('resize', calculateWidth);
     }, [visibleItems]);
 
-    // Scroll to center an index
     const scrollToIndex = useCallback((index, smooth = true) => {
         const element = wheelRef.current;
         if (!element) return;
@@ -29,13 +27,11 @@ const HorizontalScrollInput = React.memo(({ label, value, min, max, increment, o
         element.scrollTo({ left: index * itemWidth - leftPadding, behavior: smooth ? 'smooth' : 'auto' });
     }, [itemWidth]);
 
-    // Center current value on mount / value change
     useEffect(() => {
         const currentIndex = Math.round((value - min) / increment);
         scrollToIndex(currentIndex, false);
     }, [value, min, increment, scrollToIndex]);
 
-    // Snap to nearest value on scroll
     const handleScroll = useCallback(() => {
         const element = wheelRef.current;
         if (!element) return;
@@ -52,7 +48,6 @@ const HorizontalScrollInput = React.memo(({ label, value, min, max, increment, o
         }
     }, [value, min, increment, maxIndex, onChange, itemWidth, scrollToIndex]);
 
-    // Handle tap/click on an item
     const handleItemClick = (index) => {
         const newValue = min + index * increment;
         if (newValue !== value) {

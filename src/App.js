@@ -9,7 +9,7 @@ const REST_INCREMENT = 5;
 const PREP_TIME = 5;
 const HOLD_INTERVAL_MS = 100; // Time between repeating increments (fast)
 
-// --- WORKOUT STATE ENUM (Same as before) ---
+// --- WORKOUT STATE ENUM ---
 const WORKOUT_STATES = {
     SETUP: 'SETUP',
     PREP: 'PREP',
@@ -18,7 +18,7 @@ const WORKOUT_STATES = {
     COMPLETE: 'COMPLETE'
 };
 
-// --- HELPER FUNCTIONS (Same as before) ---
+// --- HELPER FUNCTIONS ---
 
 const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
@@ -36,10 +36,12 @@ const playHighPitchedNoise = () => {
     }
 };
 
-// --- FAST INPUT COMPONENT (The new press-and-hold input) ---
+// --- FAST INPUT COMPONENT (Corrected logic) ---
 const FastInput = React.memo(({ label, value, max, increment, min, onChange }) => {
     const intervalRef = useRef(null);
 
+    // CRITICAL FIX: This function now takes a 'setter' function from the parent
+    // ensuring it only updates its specific key (e.g., 'rounds') and not the whole state.
     const changeValue = useCallback((direction) => {
         onChange(prevValue => {
             let newValue;
@@ -50,7 +52,7 @@ const FastInput = React.memo(({ label, value, max, increment, min, onChange }) =
             }
             return newValue;
         });
-    }, [increment, max, min, onChange]);
+    }, [increment, max, min, onChange]); // Depend on the onChange setter
 
     const handleMouseDown = (direction) => {
         // 1. Initial change on click/touch
@@ -78,6 +80,8 @@ const FastInput = React.memo(({ label, value, max, increment, min, onChange }) =
             }
         };
     }, []);
+
+    // NOTE: MouseDown/MouseUp are for desktop testing; TouchStart/TouchEnd are for mobile.
 
     return (
         <div className="input-group">
@@ -112,7 +116,7 @@ const FastInput = React.memo(({ label, value, max, increment, min, onChange }) =
 });
 
 
-// --- MAIN APP COMPONENT (Only input component names change here) ---
+// --- MAIN APP COMPONENT ---
 
 function App() {
     const [settings, setSettings] = useState({ rounds: 5, workTime: 60, restTime: 30 });
@@ -190,6 +194,18 @@ function App() {
         setTimeRemaining(0);
         setCurrentRound(1);
     };
+    
+    // Function to create a settings setter for a specific key (e.g., 'rounds')
+    const createSettingsSetter = useCallback((key) => {
+        return (newVal) => {
+             // If newVal is a function (from FastInput), use the functional update form
+            if (typeof newVal === 'function') {
+                setSettings(prev => ({...prev, [key]: newVal(prev[key])}));
+            } else {
+                setSettings(prev => ({...prev, [key]: newVal}));
+            }
+        };
+    }, []);
 
     // --- RENDER LOGIC ---
     if (timerState === WORKOUT_STATES.SETUP) {
@@ -197,14 +213,14 @@ function App() {
             <div className="app setup-view">
                 <h1 className="title">Interval Timer Setup</h1>
                 
-                {/* Use the new FastInput component */}
+                {/* Use the new setter function to correctly update only the relevant part of the state */}
                 <FastInput 
                     label="Rounds (Max 15)"
                     value={settings.rounds}
                     min={1}
                     max={MAX_ROUNDS}
                     increment={1}
-                    onChange={(val) => setSettings(prev => ({...prev, rounds: val}))}
+                    onChange={createSettingsSetter('rounds')}
                 />
                 <FastInput 
                     label={`Work Time (Max ${MAX_TIME}s)`}
@@ -212,7 +228,7 @@ function App() {
                     min={WORK_INCREMENT}
                     max={MAX_TIME}
                     increment={WORK_INCREMENT}
-                    onChange={(val) => setSettings(prev => ({...prev, workTime: val}))}
+                    onChange={createSettingsSetter('workTime')}
                 />
                 <FastInput 
                     label={`Rest Time (Max ${MAX_TIME}s)`}
@@ -220,7 +236,7 @@ function App() {
                     min={REST_INCREMENT}
                     max={MAX_TIME}
                     increment={REST_INCREMENT}
-                    onChange={(val) => setSettings(prev => ({...prev, restTime: val}))}
+                    onChange={createSettingsSetter('restTime')}
                 />
                 
                 <button 

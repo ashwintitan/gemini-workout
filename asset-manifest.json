@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/gemini-workout/static/css/main.4e57fb03.css",
-    "main.js": "/gemini-workout/static/js/main.8f86145a.js",
+    "main.css": "/gemini-workout/static/css/main.36a6f5cb.css",
+    "main.js": "/gemini-workout/static/js/main.ee125093.js",
     "index.html": "/gemini-workout/index.html",
-    "main.4e57fb03.css.map": "/gemini-workout/static/css/main.4e57fb03.css.map",
-    "main.8f86145a.js.map": "/gemini-workout/static/js/main.8f86145a.js.map"
+    "main.36a6f5cb.css.map": "/gemini-workout/static/css/main.36a6f5cb.css.map",
+    "main.ee125093.js.map": "/gemini-workout/static/js/main.ee125093.js.map"
   },
   "entrypoints": [
-    "static/css/main.4e57fb03.css",
-    "static/js/main.8f86145a.js"
+    "static/css/main.36a6f5cb.css",
+    "static/js/main.ee125093.js"
   ]
 }

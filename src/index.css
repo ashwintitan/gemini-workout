@@ -2,9 +2,8 @@
 html, body {
     margin: 0;
     padding: 0;
-    height: 100%; /* Ensures full height coverage */
+    height: 100%; 
     width: 100%;
-    /* CRITICAL: Prevents any vertical scrolling */
     overflow-y: hidden; 
 }
 
@@ -12,8 +11,8 @@ body {
     font-family: 'Roboto', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: #121212; /* Dark Mode Background */
-    color: #f0f0f0; /* Light text for contrast */
+    background-color: #121212; 
+    color: #f0f0f0; 
 }
 
 /* APP CONTAINER */
@@ -21,41 +20,40 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-height: 100vh; 
+    height: 100vh; 
     width: 100vw;
     padding: 20px;
     box-sizing: border-box; 
     text-align: center;
 }
 
-/* SETUP VIEW STYLES - FIX: Use space-evenly to manage vertical space and prevent button from being hidden */
+/* SETUP VIEW STYLES */
 .setup-view {
-    justify-content: space-evenly; /* Spreads elements evenly vertically */
-    padding-top: 0; /* Remove unnecessary top padding */
-    height: 100vh; /* Ensure it occupies full viewport height */
+    justify-content: space-evenly; 
+    height: 100%; 
     width: 100%;
     box-sizing: border-box;
+    padding: 10px 0;
 }
 
 .title {
     font-size: 2em;
-    margin-bottom: 20px; /* Reduced from 40px to save space */
-    color: #4CAF50; /* Green accent */
+    margin-bottom: 0;
+    color: #4CAF50; 
 }
 
 /* --- SCROLL WHEEL STYLES (NEW) --- */
 .input-group {
-    margin-bottom: 25px;
+    flex-grow: 0;
+    margin-bottom: 0; 
     width: 90%;
     max-width: 450px;
-    /* Use a relative position for the absolute value display */
     position: relative;
-    padding-bottom: 10px;
 }
 
 .input-label {
     display: block;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
     font-size: 1.1em;
     font-weight: bold;
     color: #ccc;
@@ -67,17 +65,17 @@ body {
     box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
     padding: 10px 0;
     position: relative;
+    /* FIX: Added gradient overlay to fade out items at the edges */
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
 }
 
 .scroll-wheel-horizontal {
-    /* Critical settings for horizontal snapping */
     display: flex;
     overflow-x: scroll;
     -webkit-overflow-scrolling: touch;
     scroll-snap-type: x mandatory;
-    scrollbar-width: none; /* Hide scrollbar for Firefox */
-    
-    /* Center the current value vertically */
+    scrollbar-width: none;
     align-items: center;
     height: 80px;
     padding: 0;
@@ -89,21 +87,19 @@ body {
 }
 
 .scroll-item-h {
-    /* Item width must match JS itemWidth (80px) */
     width: 80px; 
     flex-shrink: 0;
     text-align: center;
     line-height: 60px;
     font-size: 1.8em;
-    color: #555; /* Faded color for non-selected items */
-    transition: color 0.1s;
-    /* Snap the item to the center of the viewport/container */
+    color: #999; /* Neutral color */
+    transition: color 0.1s, font-size 0.1s;
     scroll-snap-align: center; 
 }
 
 .scroll-item-h.active {
     color: #4CAF50; /* Highlight color for the current value */
-    font-size: 2.5em;
+    font-size: 3.5em; /* Larger size to emphasize selection */
     font-weight: 700;
 }
 
@@ -112,18 +108,26 @@ body {
     flex-shrink: 0;
 }
 
-/* Display the current value separately below the wheel */
-.value-display {
-    font-size: 1.5em;
-    font-weight: 600;
-    color: #4CAF50;
-    margin-top: 10px;
+
+/* --- BUTTON INPUT STYLES (Removed control buttons, but keeping classes for other elements) --- */
+.input-controls {
+    /* Class no longer used for controls, only for layout container */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.input-value {
+    /* Class no longer used for FastInput values, but kept if needed */
+    font-size: 3.5em;
+    font-weight: 700;
+    color: #4CAF50; 
 }
 
 
-/* START BUTTON - FIX: Reduced margin to fit better in space-evenly layout */
+/* START BUTTON - Layout is fixed by Flexbox spacing */
 .btn-start {
-    background-color: #4CAF50; /* Green */
+    background-color: #4CAF50; 
     color: #121212;
     border: none;
     padding: 20px 40px;
@@ -131,7 +135,7 @@ body {
     font-weight: bold;
     border-radius: 15px;
     cursor: pointer;
-    margin-top: 20px; /* Reduced from 30px */
+    margin-top: 0; 
     transition: background-color 0.2s;
     width: 80%;
     max-width: 350px;
@@ -144,14 +148,14 @@ body {
     opacity: 0.6;
 }
 
-/* TIMER VIEW STYLES (No change) */
+/* TIMER VIEW STYLES */
 .timer-view {
     justify-content: space-around;
     width: 100%;
 }
 
 .main-timer {
-    font-size: 20vw;
+    font-size: 20vw; 
     font-weight: 900;
     line-height: 1;
     margin: 40px 0;

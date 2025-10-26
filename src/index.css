@@ -1,6 +1,14 @@
 /* GLOBAL RESET AND FONT */
-body {
+html, body {
     margin: 0;
+    padding: 0;
+    height: 100%; /* Ensures full height coverage */
+    width: 100%;
+    /* CRITICAL: Prevents any scrolling */
+    overflow: hidden; 
+}
+
+body {
     font-family: 'Roboto', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -13,9 +21,11 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    min-height: 100vh;
+    /* Use 100vh for precise viewport height */
+    min-height: 100vh; 
+    width: 100vw; /* Use 100vw for precise viewport width */
     padding: 20px;
+    box-sizing: border-box; /* Include padding in height/width calculation */
     text-align: center;
 }
 

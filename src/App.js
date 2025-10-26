@@ -7,8 +7,9 @@ const MAX_TIME = 120;
 const WORK_INCREMENT = 15;
 const REST_INCREMENT = 5;
 const PREP_TIME = 5;
+const HOLD_INTERVAL_MS = 100; // Time between repeating increments (fast)
 
-// --- WORKOUT STATE ENUM ---
+// --- WORKOUT STATE ENUM (Same as before) ---
 const WORKOUT_STATES = {
     SETUP: 'SETUP',
     PREP: 'PREP',
@@ -17,7 +18,7 @@ const WORKOUT_STATES = {
     COMPLETE: 'COMPLETE'
 };
 
-// --- HELPER FUNCTIONS ---
+// --- HELPER FUNCTIONS (Same as before) ---
 
 const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
@@ -35,27 +36,74 @@ const playHighPitchedNoise = () => {
     }
 };
 
-// Simplified Input Component with direct control and limits
-const SimpleInput = React.memo(({ label, value, max, increment, min, onChange }) => {
-    const increase = () => {
-        const newValue = Math.min(value + increment, max);
-        onChange(newValue);
+// --- FAST INPUT COMPONENT (The new press-and-hold input) ---
+const FastInput = React.memo(({ label, value, max, increment, min, onChange }) => {
+    const intervalRef = useRef(null);
+
+    const changeValue = useCallback((direction) => {
+        onChange(prevValue => {
+            let newValue;
+            if (direction === 'up') {
+                newValue = Math.min(prevValue + increment, max);
+            } else {
+                newValue = Math.max(prevValue - increment, min);
+            }
+            return newValue;
+        });
+    }, [increment, max, min, onChange]);
+
+    const handleMouseDown = (direction) => {
+        // 1. Initial change on click/touch
+        changeValue(direction);
+
+        // 2. Start repeating interval
+        intervalRef.current = setInterval(() => {
+            changeValue(direction);
+        }, HOLD_INTERVAL_MS);
     };
 
-    const decrease = () => {
-        const newValue = Math.max(value - increment, min);
-        onChange(newValue);
+    const handleMouseUp = () => {
+        // Stop the repeating interval
+        if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+        }
     };
+
+    // Clean up interval on component unmount
+    useEffect(() => {
+        return () => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+            }
+        };
+    }, []);
 
     return (
         <div className="input-group">
             <label className="input-label">{label}</label>
             <div className="input-controls">
-                <button onClick={decrease} className="control-btn minus" disabled={value === min}>
+                <button 
+                    onMouseDown={() => handleMouseDown('down')} 
+                    onMouseUp={handleMouseUp}
+                    onMouseLeave={handleMouseUp} // Stop if mouse leaves button area
+                    onTouchStart={() => handleMouseDown('down')}
+                    onTouchEnd={handleMouseUp}
+                    className="control-btn minus" 
+                    disabled={value === min}
+                >
                     -
                 </button>
                 <span className="input-value">{value}</span>
-                <button onClick={increase} className="control-btn plus" disabled={value === max}>
+                <button 
+                    onMouseDown={() => handleMouseDown('up')} 
+                    onMouseUp={handleMouseUp}
+                    onMouseLeave={handleMouseUp}
+                    onTouchStart={() => handleMouseDown('up')}
+                    onTouchEnd={handleMouseUp}
+                    className="control-btn plus" 
+                    disabled={value === max}
+                >
                     +
                 </button>
             </div>
@@ -64,17 +112,16 @@ const SimpleInput = React.memo(({ label, value, max, increment, min, onChange })
 });
 
 
-// --- MAIN APP COMPONENT ---
+// --- MAIN APP COMPONENT (Only input component names change here) ---
 
 function App() {
-    // Ensure all inputs start above zero for the initial disabled check
     const [settings, setSettings] = useState({ rounds: 5, workTime: 60, restTime: 30 });
     const [timerState, setTimerState] = useState(WORKOUT_STATES.SETUP);
     const [timeRemaining, setTimeRemaining] = useState(0);
     const [currentRound, setCurrentRound] = useState(1);
     const intervalRef = useRef(null);
 
-    // Logic to handle state transitions (WORK -> REST, REST -> WORK)
+    // Logic to handle state transitions (Same as before)
     const handleNextState = useCallback(() => {
         if (timerState === WORKOUT_STATES.PREP) {
             setTimerState(WORKOUT_STATES.WORK);
@@ -101,19 +148,16 @@ function App() {
         }
     }, [timerState, settings, currentRound]);
 
-    // The main timer loop (runs every second)
+    // The main timer loop (Same as before)
     useEffect(() => {
-        // Stop if not running or complete
         if (timerState === WORKOUT_STATES.SETUP || timerState === WORKOUT_STATES.COMPLETE) {
             return () => clearInterval(intervalRef.current);
         }
 
-        // Set the interval
         intervalRef.current = setInterval(() => {
             setTimeRemaining(prevTime => {
                 const newTime = prevTime - 1;
 
-                // Sound Trigger: Plays on 3, 2, 1, 0 for all active timers
                 if (newTime >= 0 && newTime <= 3) {
                     playHighPitchedNoise();
                 }
@@ -128,15 +172,14 @@ function App() {
             });
         }, 1000);
 
-        // Cleanup function for useEffect (Crucial for preventing glitches/infinite loops)
         return () => clearInterval(intervalRef.current);
-    }, [timerState, settings, currentRound, handleNextState]); // Added all necessary dependencies
+    }, [timerState, settings, currentRound, handleNextState]);
 
     const startWorkout = () => {
         clearInterval(intervalRef.current);
         if (settings.rounds > 0 && settings.workTime > 0) {
             setTimerState(WORKOUT_STATES.PREP);
-            setTimeRemaining(PREP_TIME); // Start 5-second countdown
+            setTimeRemaining(PREP_TIME);
             setCurrentRound(1);
         }
     };
@@ -154,35 +197,35 @@ function App() {
             <div className="app setup-view">
                 <h1 className="title">Interval Timer Setup</h1>
                 
-                <SimpleInput 
+                {/* Use the new FastInput component */}
+                <FastInput 
                     label="Rounds (Max 15)"
                     value={settings.rounds}
                     min={1}
                     max={MAX_ROUNDS}
                     increment={1}
-                    onChange={(val) => setSettings({...settings, rounds: val})}
+                    onChange={(val) => setSettings(prev => ({...prev, rounds: val}))}
                 />
-                <SimpleInput 
+                <FastInput 
                     label={`Work Time (Max ${MAX_TIME}s)`}
                     value={settings.workTime}
                     min={WORK_INCREMENT}
                     max={MAX_TIME}
                     increment={WORK_INCREMENT}
-                    onChange={(val) => setSettings({...settings, workTime: val})}
+                    onChange={(val) => setSettings(prev => ({...prev, workTime: val}))}
                 />
-                <SimpleInput 
+                <FastInput 
                     label={`Rest Time (Max ${MAX_TIME}s)`}
                     value={settings.restTime}
                     min={REST_INCREMENT}
                     max={MAX_TIME}
                     increment={REST_INCREMENT}
-                    onChange={(val) => setSettings({...settings, restTime: val})}
+                    onChange={(val) => setSettings(prev => ({...prev, restTime: val}))}
                 />
                 
                 <button 
                     onClick={startWorkout} 
                     className="btn-start"
-                    // Check ensures user has set a valid work time and rounds
                     disabled={settings.rounds === 0 || settings.workTime === 0}
                 >
                     Start Workout
@@ -191,7 +234,7 @@ function App() {
         );
     }
 
-    // Active Timer View
+    // Active Timer View (Same as before)
     const phaseLabel = {
         [WORKOUT_STATES.PREP]: 'GET READY',
         [WORKOUT_STATES.WORK]: 'WORK',

@@ -17,16 +17,16 @@ body {
 
 /* APP CONTAINER */
 .app {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
+    justify-content: center;
     align-items: center;
-    height: 100vh; 
-    width: 100vw;
-    padding: 20px;
-    box-sizing: border-box; 
-    text-align: center;
+    padding: 1rem;
+    box-sizing: border-box;
 }
-
 /* SETUP VIEW STYLES */
 .setup-view {
     justify-content: space-evenly; 
@@ -44,21 +44,15 @@ body {
 
 /* --- SCROLL WHEEL STYLES (NEW) --- */
 .input-group {
-    flex-grow: 0;
-    margin-bottom: 0; 
-    width: 90%;
-    max-width: 450px;
-    position: relative;
+    margin: 1rem 0;
+    width: 100%;
 }
 
 .input-label {
     display: block;
-    margin-bottom: 10px;
-    font-size: 1.1em;
+    margin-bottom: 0.5rem;
     font-weight: bold;
-    color: #ccc;
 }
-
 .scroll-container {
     background-color: #1e1e1e;
     border-radius: 15px;

@@ -18,7 +18,7 @@ const WORKOUT_STATES = {
     COMPLETE: 'COMPLETE'
 };
 
-// --- HELPER FUNCTIONS ---
+// --- HELPER FUNCTIONS (No change) ---
 
 const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
@@ -36,31 +36,56 @@ const playHighPitchedNoise = () => {
     }
 };
 
-// --- FAST INPUT COMPONENT (Corrected logic) ---
+// --- FAST INPUT COMPONENT (Fix applied here) ---
 const FastInput = React.memo(({ label, value, max, increment, min, onChange }) => {
     const intervalRef = useRef(null);
 
-    // CRITICAL FIX: This function now takes a 'setter' function from the parent
-    // ensuring it only updates its specific key (e.g., 'rounds') and not the whole state.
-    const changeValue = useCallback((direction) => {
+    const changeValue = useCallback((direction, currentValue) => {
+        let newValue;
+        if (direction === 'up') {
+            newValue = Math.min(currentValue + increment, max);
+        } else {
+            newValue = Math.max(currentValue - increment, min);
+        }
+        return newValue;
+    }, [increment, max, min]); 
+    
+    // Function that updates state by calling the parent's setter
+    const applyChange = useCallback((direction) => {
         onChange(prevValue => {
-            let newValue;
-            if (direction === 'up') {
-                newValue = Math.min(prevValue + increment, max);
-            } else {
-                newValue = Math.max(prevValue - increment, min);
-            }
-            return newValue;
+            return changeValue(direction, prevValue);
         });
-    }, [increment, max, min, onChange]); // Depend on the onChange setter
+    }, [onChange, changeValue]);
 
+    // *** FIX: Separate initial click and check boundary before starting interval ***
     const handleMouseDown = (direction) => {
-        // 1. Initial change on click/touch
-        changeValue(direction);
+        // Stop any running interval first
+        if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+        }
+
+        // 1. Apply the change once on the initial click
+        applyChange(direction);
+
+        // Check if we are at the boundary BEFORE starting the loop
+        const nextValue = changeValue(direction, value);
+        if (nextValue === value) {
+            // Already at max or min, don't start the repeating interval
+            return;
+        }
 
         // 2. Start repeating interval
         intervalRef.current = setInterval(() => {
-            changeValue(direction);
+            // Use the setter function for reliable, continuous updates
+            applyChange(direction);
+
+            // OPTIONAL: Check inside the interval to stop automatically at boundary
+            // This is handled better by the disabled prop, but acts as a safeguard.
+            if (value === max || value === min) {
+                 clearInterval(intervalRef.current);
+                 intervalRef.current = null;
+            }
         }, HOLD_INTERVAL_MS);
     };
 
@@ -81,8 +106,6 @@ const FastInput = React.memo(({ label, value, max, increment, min, onChange }) =
         };
     }, []);
 
-    // NOTE: MouseDown/MouseUp are for desktop testing; TouchStart/TouchEnd are for mobile.
-
     return (
         <div className="input-group">
             <label className="input-label">{label}</label>
@@ -90,7 +113,7 @@ const FastInput = React.memo(({ label, value, max, increment, min, onChange }) =
                 <button 
                     onMouseDown={() => handleMouseDown('down')} 
                     onMouseUp={handleMouseUp}
-                    onMouseLeave={handleMouseUp} // Stop if mouse leaves button area
+                    onMouseLeave={handleMouseUp} 
                     onTouchStart={() => handleMouseDown('down')}
                     onTouchEnd={handleMouseUp}
                     className="control-btn minus" 
@@ -116,7 +139,7 @@ const FastInput = React.memo(({ label, value, max, increment, min, onChange }) =
 });
 
 
-// --- MAIN APP COMPONENT ---
+// --- MAIN APP COMPONENT (No logical changes needed here) ---
 
 function App() {
     const [settings, setSettings] = useState({ rounds: 5, workTime: 60, restTime: 30 });
@@ -195,10 +218,8 @@ function App() {
         setCurrentRound(1);
     };
     
-    // Function to create a settings setter for a specific key (e.g., 'rounds')
     const createSettingsSetter = useCallback((key) => {
         return (newVal) => {
-             // If newVal is a function (from FastInput), use the functional update form
             if (typeof newVal === 'function') {
                 setSettings(prev => ({...prev, [key]: newVal(prev[key])}));
             } else {
@@ -207,13 +228,12 @@ function App() {
         };
     }, []);
 
-    // --- RENDER LOGIC ---
+    // --- RENDER LOGIC (Same as before) ---
     if (timerState === WORKOUT_STATES.SETUP) {
         return (
             <div className="app setup-view">
                 <h1 className="title">Interval Timer Setup</h1>
                 
-                {/* Use the new setter function to correctly update only the relevant part of the state */}
                 <FastInput 
                     label="Rounds (Max 15)"
                     value={settings.rounds}
@@ -250,7 +270,6 @@ function App() {
         );
     }
 
-    // Active Timer View (Same as before)
     const phaseLabel = {
         [WORKOUT_STATES.PREP]: 'GET READY',
         [WORKOUT_STATES.WORK]: 'WORK',

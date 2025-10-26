@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback, useState } from 'react';
+import React, { useRef, useLayoutEffect, useCallback, useState } from 'react';
 import './index.css';
 
 const HorizontalScrollInput = React.memo(({ label, value, min, max, increment, onChange }) => {
@@ -8,7 +8,8 @@ const HorizontalScrollInput = React.memo(({ label, value, min, max, increment, o
     const maxIndex = Math.floor((max - min) / increment);
     const items = Array.from({ length: maxIndex + 1 }, (_, i) => min + i * increment);
 
-    useEffect(() => {
+    // Measure width before paint
+    useLayoutEffect(() => {
         const calculateWidth = () => {
             if (wheelRef.current) {
                 const containerWidth = wheelRef.current.offsetWidth;
@@ -27,7 +28,7 @@ const HorizontalScrollInput = React.memo(({ label, value, min, max, increment, o
         element.scrollTo({ left: index * itemWidth - leftPadding, behavior: smooth ? 'smooth' : 'auto' });
     }, [itemWidth]);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         const currentIndex = Math.round((value - min) / increment);
         scrollToIndex(currentIndex, false);
     }, [value, min, increment, scrollToIndex]);
@@ -35,13 +36,11 @@ const HorizontalScrollInput = React.memo(({ label, value, min, max, increment, o
     const handleScroll = useCallback(() => {
         const element = wheelRef.current;
         if (!element) return;
-
         const leftPadding = (element.offsetWidth / 2) - (itemWidth / 2);
         const scrollLeft = element.scrollLeft;
         const centeredIndex = Math.round((scrollLeft + leftPadding) / itemWidth);
         const newIndex = Math.max(0, Math.min(maxIndex, centeredIndex));
         const newValue = min + newIndex * increment;
-
         if (newValue !== value) {
             onChange(newValue);
             scrollToIndex(newIndex, true);
@@ -73,7 +72,7 @@ const HorizontalScrollInput = React.memo(({ label, value, min, max, increment, o
                             style={{ width: itemWidth }}
                             onClick={() => handleItemClick(index)}
                         >
-                            {item}
+                            <div className="scroll-item-inner">{item}</div>
                         </div>
                     ))}
                     <div className="scroll-padding-end" style={{ width: `${(itemWidth * visibleItems)/2}px` }} />

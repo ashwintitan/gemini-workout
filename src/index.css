@@ -34,7 +34,6 @@
 .scroll-container {
     width: 100%;
     overflow: hidden;
-    box-sizing: border-box;
 }
 
 .scroll-wheel-horizontal {
@@ -44,8 +43,8 @@
     scroll-snap-type: x mandatory;
     -ms-overflow-style: none;
     scrollbar-width: none;
-    align-items: center;  /* fixes vertical jitter */
-    height: 100px;        /* fixed wheel height */
+    align-items: center;
+    height: 100px;
 }
 .scroll-wheel-horizontal::-webkit-scrollbar {
     display: none;
@@ -58,18 +57,26 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100%;          /* fills parent height */
+    height: 100%;
     font-size: 2.5rem;
     line-height: 1;
     cursor: pointer;
     color: #aaaaaa;
-    transition: transform 0.2s, color 0.2s;
+    transition: color 0.2s;
 }
 
-.scroll-item-h.active {
-    font-weight: bold;
-    color: #ff5722;
+.scroll-item-inner {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.2s;
+}
+
+.scroll-item-h.active .scroll-item-inner {
     transform: scale(1.3);
+    color: #ff5722;
+    font-weight: bold;
 }
 
 .timer-view .phase-label {

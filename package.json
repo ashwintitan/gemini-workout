@@ -2,7 +2,7 @@
   "name": "gym-timer-app",
   "version": "1.0.0",
   "description": "One-pager gym timer built with React.",
-"homepage": "https://ashwintitan.github.io/gemini-workout",
+"homepage": "https://ashwintitan.github.io/gemini-workout/",
   "private": true,
   "dependencies": {
     "react": "^18.2.0",

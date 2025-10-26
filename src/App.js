@@ -18,7 +18,7 @@ const WORKOUT_STATES = {
     COMPLETE: 'COMPLETE'
 };
 
-// --- HELPER FUNCTIONS (No change) ---
+// --- HELPER FUNCTIONS ---
 
 const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
@@ -40,11 +40,13 @@ const playHighPitchedNoise = () => {
 const FastInput = React.memo(({ label, value, max, increment, min, onChange }) => {
     const intervalRef = useRef(null);
 
+    // CRITICAL FIX: Ensure the change logic correctly respects the 'min' prop.
     const changeValue = useCallback((direction, currentValue) => {
         let newValue;
         if (direction === 'up') {
             newValue = Math.min(currentValue + increment, max);
         } else {
+            // Ensure the value does not drop below the specific 'min' set by the parent
             newValue = Math.max(currentValue - increment, min);
         }
         return newValue;
@@ -57,7 +59,6 @@ const FastInput = React.memo(({ label, value, max, increment, min, onChange }) =
         });
     }, [onChange, changeValue]);
 
-    // *** FIX: Separate initial click and check boundary before starting interval ***
     const handleMouseDown = (direction) => {
         // Stop any running interval first
         if (intervalRef.current) {
@@ -68,24 +69,17 @@ const FastInput = React.memo(({ label, value, max, increment, min, onChange }) =
         // 1. Apply the change once on the initial click
         applyChange(direction);
 
-        // Check if we are at the boundary BEFORE starting the loop
+        // Check if we are at the boundary AFTER the first click.
+        // If the value hasn't changed after the first click, we are stuck at a boundary.
         const nextValue = changeValue(direction, value);
         if (nextValue === value) {
-            // Already at max or min, don't start the repeating interval
+            // Already at max or min, do NOT start the repeating interval
             return;
         }
 
         // 2. Start repeating interval
         intervalRef.current = setInterval(() => {
-            // Use the setter function for reliable, continuous updates
             applyChange(direction);
-
-            // OPTIONAL: Check inside the interval to stop automatically at boundary
-            // This is handled better by the disabled prop, but acts as a safeguard.
-            if (value === max || value === min) {
-                 clearInterval(intervalRef.current);
-                 intervalRef.current = null;
-            }
         }, HOLD_INTERVAL_MS);
     };
 
@@ -117,7 +111,7 @@ const FastInput = React.memo(({ label, value, max, increment, min, onChange }) =
                     onTouchStart={() => handleMouseDown('down')}
                     onTouchEnd={handleMouseUp}
                     className="control-btn minus" 
-                    disabled={value === min}
+                    disabled={value === min} // Disabled check is accurate
                 >
                     -
                 </button>
@@ -129,7 +123,7 @@ const FastInput = React.memo(({ label, value, max, increment, min, onChange }) =
                     onTouchStart={() => handleMouseDown('up')}
                     onTouchEnd={handleMouseUp}
                     className="control-btn plus" 
-                    disabled={value === max}
+                    disabled={value === max} // Disabled check is accurate
                 >
                     +
                 </button>
@@ -237,7 +231,7 @@ function App() {
                 <FastInput 
                     label="Rounds (Max 15)"
                     value={settings.rounds}
-                    min={1}
+                    min={1} // Min Round is 1
                     max={MAX_ROUNDS}
                     increment={1}
                     onChange={createSettingsSetter('rounds')}
@@ -245,7 +239,7 @@ function App() {
                 <FastInput 
                     label={`Work Time (Max ${MAX_TIME}s)`}
                     value={settings.workTime}
-                    min={WORK_INCREMENT}
+                    min={WORK_INCREMENT} // Min Work Time is 15
                     max={MAX_TIME}
                     increment={WORK_INCREMENT}
                     onChange={createSettingsSetter('workTime')}
@@ -253,7 +247,7 @@ function App() {
                 <FastInput 
                     label={`Rest Time (Max ${MAX_TIME}s)`}
                     value={settings.restTime}
-                    min={REST_INCREMENT}
+                    min={REST_INCREMENT} // Min Rest Time is 5
                     max={MAX_TIME}
                     increment={REST_INCREMENT}
                     onChange={createSettingsSetter('restTime')}

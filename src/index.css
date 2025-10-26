@@ -74,9 +74,10 @@ body {
     overflow-x: scroll;
     scroll-behavior: smooth;
     width: 100%;
-    -ms-overflow-style: none;  /* IE & Edge */
-    scrollbar-width: none;      /* Firefox */
-/* Hide scrollbar for Webkit browsers (Chrome, Safari) */
+    -ms-overflow-style: none;
+scrollbar-width: none;
+}
+
 .scroll-wheel-horizontal::-webkit-scrollbar {
     display: none;
 }

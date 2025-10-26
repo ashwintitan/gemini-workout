@@ -4,8 +4,8 @@ html, body {
     padding: 0;
     height: 100%; /* Ensures full height coverage */
     width: 100%;
-    /* CRITICAL: Prevents any scrolling */
-    overflow: hidden; 
+    /* CRITICAL: Prevents any vertical scrolling */
+    overflow-y: hidden; 
 }
 
 body {
@@ -21,11 +21,10 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    /* Use 100vh for precise viewport height */
     min-height: 100vh; 
-    width: 100vw; /* Use 100vw for precise viewport width */
+    width: 100vw;
     padding: 20px;
-    box-sizing: border-box; /* Include padding in height/width calculation */
+    box-sizing: border-box; 
     text-align: center;
 }
 
@@ -41,72 +40,83 @@ body {
     color: #4CAF50; /* Green accent */
 }
 
-/* INPUT GROUP STYLES (Clean Button Input) */
+/* --- SCROLL WHEEL STYLES (NEW) --- */
 .input-group {
     margin-bottom: 25px;
-    width: 80%;
-    max-width: 350px;
+    width: 90%;
+    max-width: 450px;
+    /* Use a relative position for the absolute value display */
+    position: relative;
+    padding-bottom: 10px;
 }
 
 .input-label {
     display: block;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
     font-size: 1.1em;
     font-weight: bold;
     color: #ccc;
 }
 
-.input-controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.scroll-container {
     background-color: #1e1e1e;
     border-radius: 15px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+    padding: 10px 0;
+    position: relative;
 }
 
-.control-btn {
-    background-color: #333;
-    color: white;
-    border: none;
-    padding: 15px 30px;
-    font-size: 1.8em;
-    cursor: pointer;
-    transition: background-color 0.2s, transform 0.1s;
-    flex-grow: 0;
-    width: 70px;
-    height: 70px;
-    border-radius: 15px;
+.scroll-wheel-horizontal {
+    /* Critical settings for horizontal snapping */
+    display: flex;
+    overflow-x: scroll;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none; /* Hide scrollbar for Firefox */
+    
+    /* Center the current value vertically */
+    align-items: center;
+    height: 80px;
+    padding: 0;
 }
 
-.control-btn.minus {
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
+/* Hide scrollbar for Webkit browsers (Chrome, Safari) */
+.scroll-wheel-horizontal::-webkit-scrollbar {
+    display: none;
 }
 
-.control-btn.plus {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-}
-
-.control-btn:hover:not(:disabled) {
-    background-color: #555;
-}
-
-.control-btn:disabled {
-    background-color: #2a2a2a;
-    color: #555;
-    cursor: not-allowed;
-}
-
-.input-value {
-    font-size: 3em;
-    font-weight: 700;
-    color: #4CAF50; /* Green highlight for the value */
-    flex-grow: 1;
+.scroll-item-h {
+    /* Item width must match JS itemWidth (80px) */
+    width: 80px; 
+    flex-shrink: 0;
     text-align: center;
-    padding: 0 10px;
+    line-height: 60px;
+    font-size: 1.8em;
+    color: #555; /* Faded color for non-selected items */
+    transition: color 0.1s;
+    /* Snap the item to the center of the viewport/container */
+    scroll-snap-align: center; 
 }
+
+.scroll-item-h.active {
+    color: #4CAF50; /* Highlight color for the current value */
+    font-size: 2.5em;
+    font-weight: 700;
+}
+
+/* Padding to ensure the first and last values can snap to the center */
+.scroll-padding-start, .scroll-padding-end {
+    flex-shrink: 0;
+}
+
+/* Display the current value separately below the wheel */
+.value-display {
+    font-size: 1.5em;
+    font-weight: 600;
+    color: #4CAF50;
+    margin-top: 10px;
+}
+
 
 /* START BUTTON */
 .btn-start {
@@ -131,15 +141,14 @@ body {
     opacity: 0.6;
 }
 
-/* TIMER VIEW STYLES */
+/* TIMER VIEW STYLES (No change) */
 .timer-view {
-    /* Ensures the timer dominates the screen */
     justify-content: space-around;
     width: 100%;
 }
 
 .main-timer {
-    font-size: 20vw; /* Very large text for mobile visibility */
+    font-size: 20vw;
     font-weight: 900;
     line-height: 1;
     margin: 40px 0;
@@ -159,22 +168,21 @@ body {
     padding: 10px 20px;
     border-radius: 10px;
     margin-bottom: 20px;
-    /* Default color for Prep/Complete/Reset */
     color: white;
 }
 
 /* Phase Colors */
 .work-phase .phase-label {
-    color: #FF5722; /* Red-Orange for Work */
+    color: #FF5722;
 }
 .rest-phase .phase-label {
-    color: #2196F3; /* Blue for Rest */
+    color: #2196F3;
 }
 .prep-phase .phase-label {
-    color: #FFC107; /* Yellow for Prep */
+    color: #FFC107;
 }
 .complete-phase .phase-label {
-    color: #4CAF50; /* Green for Complete */
+    color: #4CAF50;
 }
 
 /* Reset Button */

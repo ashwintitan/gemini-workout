@@ -7,6 +7,7 @@ const MAX_TIME = 120;
 const WORK_INCREMENT = 15;
 const REST_INCREMENT = 5;
 const PREP_TIME = 5;
+const HOLD_INTERVAL_MS = 100; // Time between repeating increments (fast)
 
 // --- WORKOUT STATE ENUM ---
 const WORKOUT_STATES = {
@@ -35,89 +36,90 @@ const playHighPitchedNoise = () => {
     }
 };
 
-// --- HORIZONTAL SCROLL INPUT COMPONENT (FIX APPLIED HERE) ---
-const HorizontalScrollInput = React.memo(({ label, value, max, increment, min, onChange }) => {
-    const wheelRef = useRef(null);
-    const itemWidth = 80; // Must match CSS
-    const maxIndex = Math.floor((max - min) / increment);
-    
-    // Generate all possible values for the wheel
-    const items = Array.from({ length: maxIndex + 1 }, (_, i) => min + i * increment);
-    
-    // Calculate the index corresponding to the current value
-    const currentIndex = Math.floor((value - min) / increment);
+// --- FAST INPUT COMPONENT (Press-and-Hold - Stable Version) ---
+const FastInput = React.memo(({ label, value, max, increment, min, onChange }) => {
+    const intervalRef = useRef(null);
 
-    // Effect to set the initial scroll position correctly on load/value change
-    useEffect(() => {
-        if (wheelRef.current) {
-            // Calculate the position required to center the item (currentIndex)
-            const scrollCenter = (currentIndex * itemWidth);
-            
-            // Calculate the offset needed to center the item in the scroll window
-            const offset = (wheelRef.current.offsetWidth / 2) - (itemWidth / 2);
-            
-            // Set the scroll position
-            wheelRef.current.scrollLeft = scrollCenter - offset;
+    const changeValue = useCallback((direction, currentValue) => {
+        let newValue;
+        if (direction === 'up') {
+            newValue = Math.min(currentValue + increment, max);
+        } else {
+            newValue = Math.max(currentValue - increment, min);
         }
-    }, [currentIndex, items.length, min, increment]);
+        return newValue;
+    }, [increment, max, min]); 
+    
+    const applyChange = useCallback((direction) => {
+        onChange(prevValue => {
+            return changeValue(direction, prevValue);
+        });
+    }, [onChange, changeValue]);
 
-    // Debounce function to prevent excessive state updates during scrolling
-    const debounceRef = useRef(null);
-    const handleScroll = () => {
-        if (debounceRef.current) clearTimeout(debounceRef.current);
+    const handleMouseDown = (direction) => {
+        if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+        }
 
-        debounceRef.current = setTimeout(() => {
-            const element = wheelRef.current;
-            if (!element) return;
+        // 1. Apply the change once on the initial click
+        applyChange(direction);
 
-            // --- FIX: Correct calculation for centered scroll-snap index ---
-            
-            // 1. Get the current scrollLeft position
-            const scrollLeft = element.scrollLeft;
+        // Check if we are stuck at a boundary after the first click
+        const nextValue = changeValue(direction, value);
+        if (nextValue === value) {
+            return;
+        }
 
-            // 2. Calculate the index: scroll position / item width. 
-            // We use itemWidth (80) which is the distance between snap points.
-            // We round the result to find the index of the nearest snapped item.
-            const rawIndex = Math.round(scrollLeft / itemWidth);
-            
-            // 3. Clamp the index between 0 and maxIndex
-            let newIndex = Math.max(0, Math.min(maxIndex, rawIndex));
-            
-            // 4. Calculate the actual value based on the new index
-            const newValue = min + newIndex * increment;
-
-            if (newValue !== value) {
-                onChange(newValue);
-            }
-        }, 100); // 100ms debounce
+        // 2. Start repeating interval
+        intervalRef.current = setInterval(() => {
+            applyChange(direction);
+        }, HOLD_INTERVAL_MS);
     };
+
+    const handleMouseUp = () => {
+        if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+        }
+    };
+
+    useEffect(() => {
+        return () => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+            }
+        };
+    }, []);
 
     return (
         <div className="input-group">
             <label className="input-label">{label}</label>
-            <div className="scroll-container">
-                <div 
-                    ref={wheelRef} 
-                    className="scroll-wheel-horizontal"
-                    onScroll={handleScroll}
+            <div className="input-controls">
+                <button 
+                    onMouseDown={() => handleMouseDown('down')} 
+                    onMouseUp={handleMouseUp}
+                    onMouseLeave={handleMouseUp} 
+                    onTouchStart={() => handleMouseDown('down')}
+                    onTouchEnd={handleMouseUp}
+                    className="control-btn minus" 
+                    disabled={value === min}
                 >
-                    {/* Add invisible padding items for centering the first and last values */}
-                    <div className="scroll-padding-start" style={{ width: `calc(50% - ${itemWidth / 2}px)` }}></div>
-                    
-                    {items.map((item, index) => (
-                        <div 
-                            key={index} 
-                            className={`scroll-item-h ${item === value ? 'active' : ''}`}
-                            style={{ width: itemWidth }}
-                        >
-                            {item}
-                        </div>
-                    ))}
-
-                    <div className="scroll-padding-end" style={{ width: `calc(50% - ${itemWidth / 2}px)` }}></div>
-                </div>
+                    -
+                </button>
+                <span className="input-value">{value}</span>
+                <button 
+                    onMouseDown={() => handleMouseDown('up')} 
+                    onMouseUp={handleMouseUp}
+                    onMouseLeave={handleMouseUp}
+                    onTouchStart={() => handleMouseDown('up')}
+                    onTouchEnd={handleMouseUp}
+                    className="control-btn plus" 
+                    disabled={value === max}
+                >
+                    +
+                </button>
             </div>
-            <div className="value-display">{value}</div>
         </div>
     );
 });
@@ -204,7 +206,6 @@ function App() {
     
     const createSettingsSetter = useCallback((key) => {
         return (newVal) => {
-            // The ScrollInput directly passes the final value, so we use the non-function update path
             if (typeof newVal === 'function') {
                 setSettings(prev => ({...prev, [key]: newVal(prev[key])}));
             } else {
@@ -219,15 +220,16 @@ function App() {
             <div className="app setup-view">
                 <h1 className="title">Interval Timer Setup</h1>
                 
-                <HorizontalScrollInput 
-                    label="Rounds (Scroll Left/Right)"
+                {/* Reverting to the highly stable FastInput component */}
+                <FastInput 
+                    label="Rounds (Press & Hold for Speed)"
                     value={settings.rounds}
                     min={1} 
                     max={MAX_ROUNDS}
                     increment={1}
                     onChange={createSettingsSetter('rounds')}
                 />
-                <HorizontalScrollInput 
+                <FastInput 
                     label={`Work Time (Intervals of ${WORK_INCREMENT}s)`}
                     value={settings.workTime}
                     min={WORK_INCREMENT} 
@@ -235,7 +237,7 @@ function App() {
                     increment={WORK_INCREMENT}
                     onChange={createSettingsSetter('workTime')}
                 />
-                <HorizontalScrollInput 
+                <FastInput 
                     label={`Rest Time (Intervals of ${REST_INCREMENT}s)`}
                     value={settings.restTime}
                     min={REST_INCREMENT} 

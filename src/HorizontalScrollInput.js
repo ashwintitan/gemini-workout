@@ -3,12 +3,12 @@ import './index.css';
 
 const HorizontalScrollInput = React.memo(({ label, value, min, max, increment, onChange }) => {
     const wheelRef = useRef(null);
-    const [itemWidth, setItemWidth] = useState(80); 
-    const [visibleItems, setVisibleItems] = useState(5); // default visible items
+    const [itemWidth, setItemWidth] = useState(80);
+    const [visibleItems, setVisibleItems] = useState(5);
     const maxIndex = Math.floor((max - min) / increment);
     const items = Array.from({ length: maxIndex + 1 }, (_, i) => min + i * increment);
 
-    // Dynamically calculate item width based on container width
+    // Dynamically calculate item width based on container
     useEffect(() => {
         const calculateWidth = () => {
             if (wheelRef.current) {
@@ -21,7 +21,6 @@ const HorizontalScrollInput = React.memo(({ label, value, min, max, increment, o
         return () => window.removeEventListener('resize', calculateWidth);
     }, [visibleItems]);
 
-    // Scroll to center a given index
     const scrollToIndex = useCallback((index, smooth = false) => {
         const element = wheelRef.current;
         if (!element) return;
@@ -30,13 +29,11 @@ const HorizontalScrollInput = React.memo(({ label, value, min, max, increment, o
         element.scrollTo({ left: targetScrollLeft, behavior: smooth ? 'smooth' : 'auto' });
     }, [itemWidth]);
 
-    // Center the current value on mount or when value changes
     useEffect(() => {
         const currentIndex = Math.round((value - min) / increment);
         scrollToIndex(currentIndex);
     }, [value, min, increment, scrollToIndex]);
 
-    // Handle scroll and snap to nearest item
     const handleScroll = useCallback(() => {
         const element = wheelRef.current;
         if (!element) return;
@@ -59,11 +56,7 @@ const HorizontalScrollInput = React.memo(({ label, value, min, max, increment, o
             <label className="input-label">{label}</label>
             <div className="scroll-container">
                 <div ref={wheelRef} className="scroll-wheel-horizontal" onScroll={handleScroll}>
-                    {/* Extra padding ensures first and last items are fully scrollable */}
-                    <div
-                        className="scroll-padding-start"
-                        style={{ width: itemWidth * 2 }}
-                    />
+                    <div className="scroll-padding-start" style={{ width: itemWidth * 2 }} />
                     {items.map((item, index) => (
                         <div
                             key={index}
@@ -73,10 +66,7 @@ const HorizontalScrollInput = React.memo(({ label, value, min, max, increment, o
                             {item}
                         </div>
                     ))}
-                    <div
-                        className="scroll-padding-end"
-                        style={{ width: itemWidth * 2 }}
-                    />
+                    <div className="scroll-padding-end" style={{ width: itemWidth * 2 }} />
                 </div>
             </div>
         </div>

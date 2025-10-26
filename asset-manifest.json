@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/gemini-workout/static/css/main.cb0ab54d.css",
+    "main.js": "/gemini-workout/static/js/main.dd96fd5e.js",
+    "index.html": "/gemini-workout/index.html",
+    "main.cb0ab54d.css.map": "/gemini-workout/static/css/main.cb0ab54d.css.map",
+    "main.dd96fd5e.js.map": "/gemini-workout/static/js/main.dd96fd5e.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.cb0ab54d.css",
+    "static/js/main.dd96fd5e.js"
+  ]
+}

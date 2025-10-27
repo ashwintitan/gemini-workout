@@ -16,17 +16,18 @@ html, body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  text-align: center;
 }
 
 .title {
   font-size: 2rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   color: #ffffffcc;
 }
 
 .scroll-section {
   width: 100%;
-  height: 70%;
+  flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: space-around;
@@ -71,8 +72,8 @@ html, body {
   width: 100px;
   padding: 0 1rem;
   opacity: 0.3;
-  transition: transform 0.3s, opacity 0.3s, color 0.3s;
   color: #888;
+  transition: transform 0.3s, opacity 0.3s, color 0.3s;
 }
 
 .scroll-item.active {
@@ -81,6 +82,85 @@ html, body {
   opacity: 1;
 }
 
+.pulse {
+  animation: pulseEffect 0.5s ease-in-out;
+}
+
+@keyframes pulseEffect {
+  0% { transform: scale(1.3); }
+  50% { transform: scale(1.45); }
+  100% { transform: scale(1.3); }
+}
+
+/* Workout Timer Phase */
+.workout-view {
+  text-align: center;
+}
+
+.countdown-phase {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  transition: background 0.5s ease-in-out;
+}
+
+.phase-work {
+  background-color: #1a1a1a;
+}
+
+.phase-rest {
+  background-color: #0f3d3e;
+}
+
+.phase-title {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  color: #aaa;
+  letter-spacing: 2px;
+}
+
+.timer-number {
+  font-size: 5rem;
+  font-weight: 600;
+  color: #fff;
+  animation: timerPulse 1s ease-in-out infinite;
+}
+
+@keyframes timerPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.round-info {
+  margin-top: 0.5rem;
+  font-size: 1rem;
+  color: #888;
+}
+
+/* Buttons */
+.btn-start,
+.btn-reset {
+  background-color: #1a1a1a;
+  color: #fff;
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 0.8rem 2rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+  margin-top: 1rem;
+}
+
+.btn-start:hover,
+.btn-reset:hover {
+  background-color: #222;
+  transform: scale(1.05);
+}
+
+/* Mobile */
 @media (max-width: 600px) {
   .scroll-item {
     font-size: 2rem;
@@ -89,7 +169,7 @@ html, body {
   .title {
     font-size: 1.5rem;
   }
-  .scroll-label {
-    font-size: 0.9rem;
+  .timer-number {
+    font-size: 4rem;
   }
 }

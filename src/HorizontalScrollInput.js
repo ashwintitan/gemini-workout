@@ -5,18 +5,18 @@ const HorizontalScrollInput = ({ label, value, min, max, increment, onChange }) 
   const [items, setItems] = useState([]);
   const [isUserScrolling, setIsUserScrolling] = useState(false);
 
-  // Generate values
+  // Generate value range
   useEffect(() => {
     const vals = [];
     for (let i = min; i <= max; i += increment) vals.push(i);
     setItems(vals);
   }, [min, max, increment]);
 
-  // Duplicate array 3 times for infinite effect
+  // Duplicate array for infinite effect
   const circularItems = [...items, ...items, ...items];
   const middleIndex = items.length;
 
-  // Center on middle copy
+  // Scroll to center copy once on mount
   useEffect(() => {
     const container = containerRef.current;
     if (!container || !items.length) return;
@@ -24,37 +24,31 @@ const HorizontalScrollInput = ({ label, value, min, max, increment, onChange }) 
     container.scrollLeft = itemWidth * middleIndex;
   }, [items]);
 
-  // Infinite scroll logic
-  const handleScroll = () => {
-    const container = containerRef.current;
-    const scrollLeft = container.scrollLeft;
-    const totalWidth = container.scrollWidth;
-    const third = totalWidth / 3;
-
-    if (scrollLeft < third / 2) {
-      container.scrollLeft += third;
-    } else if (scrollLeft > third * 1.5) {
-      container.scrollLeft -= third;
-    }
-  };
-
-  // Tap selection
-  const handleClick = (item) => {
-    onChange(item);
-  };
-
-  // Detect closest item after scroll stops
+  // Track user scroll, debounce detection
   useEffect(() => {
     if (!isUserScrolling) return;
     const timeout = setTimeout(() => {
       const container = containerRef.current;
+      if (!container) return;
+
+      const totalWidth = container.scrollWidth;
+      const sectionWidth = totalWidth / 3;
+
+      // Adjust scroll to keep user inside middle section for infinite feel
+      if (container.scrollLeft < sectionWidth / 2) {
+        container.scrollLeft += sectionWidth;
+      } else if (container.scrollLeft > sectionWidth * 1.5) {
+        container.scrollLeft -= sectionWidth;
+      }
+
+      // Find the nearest value to center
       const center = container.scrollLeft + container.offsetWidth / 2;
-      const itemWidth = container.scrollWidth / circularItems.length;
+      const itemWidth = totalWidth / circularItems.length;
       const index = Math.round(center / itemWidth) % items.length;
       const selectedValue = items[index];
       if (selectedValue !== undefined) onChange(selectedValue);
       setIsUserScrolling(false);
-    }, 150);
+    }, 200);
     return () => clearTimeout(timeout);
   }, [isUserScrolling, onChange, circularItems, items]);
 
@@ -64,16 +58,13 @@ const HorizontalScrollInput = ({ label, value, min, max, increment, onChange }) 
       <div
         className="scroll-wheel"
         ref={containerRef}
-        onScroll={() => {
-          setIsUserScrolling(true);
-          handleScroll();
-        }}
+        onScroll={() => setIsUserScrolling(true)}
       >
         {circularItems.map((item, i) => (
           <div
             key={i}
             className={`scroll-item ${item === value ? "active" : ""}`}
-            onClick={() => handleClick(item)}
+            onClick={() => onChange(item)}
           >
             {item}
           </div>

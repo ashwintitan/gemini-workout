@@ -1,85 +1,86 @@
-import React, { useRef, useLayoutEffect, useCallback, useState } from 'react';
-import './index.css';
+import React, { useEffect, useRef, useState } from "react";
 
-const HorizontalScrollInput = React.memo(({ label, value, min, max, increment, onChange }) => {
-    const wheelRef = useRef(null);
-    const [itemWidth, setItemWidth] = useState(80);
-    const visibleItems = 5;
-    const maxIndex = Math.floor((max - min) / increment);
-    const items = Array.from({ length: maxIndex + 1 }, (_, i) => min + i * increment);
+const HorizontalScrollInput = ({ label, value, min, max, increment, onChange }) => {
+  const containerRef = useRef(null);
+  const [items, setItems] = useState([]);
+  const [isUserScrolling, setIsUserScrolling] = useState(false);
 
-    // Measure width before paint
-    useLayoutEffect(() => {
-        const calculateWidth = () => {
-            if (wheelRef.current) {
-                const containerWidth = wheelRef.current.offsetWidth;
-                setItemWidth(containerWidth / visibleItems);
-            }
-        };
-        calculateWidth();
-        window.addEventListener('resize', calculateWidth);
-        return () => window.removeEventListener('resize', calculateWidth);
-    }, [visibleItems]);
+  // Generate values
+  useEffect(() => {
+    const vals = [];
+    for (let i = min; i <= max; i += increment) vals.push(i);
+    setItems(vals);
+  }, [min, max, increment]);
 
-    const scrollToIndex = useCallback((index, smooth = true) => {
-        const element = wheelRef.current;
-        if (!element) return;
-        const leftPadding = (element.offsetWidth / 2) - (itemWidth / 2);
-        element.scrollTo({ left: index * itemWidth - leftPadding, behavior: smooth ? 'smooth' : 'auto' });
-    }, [itemWidth]);
+  // Duplicate array 3 times for infinite effect
+  const circularItems = [...items, ...items, ...items];
+  const middleIndex = items.length;
 
-    useLayoutEffect(() => {
-        const currentIndex = Math.round((value - min) / increment);
-        scrollToIndex(currentIndex, false);
-    }, [value, min, increment, scrollToIndex]);
+  // Center on middle copy
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || !items.length) return;
+    const itemWidth = container.scrollWidth / circularItems.length;
+    container.scrollLeft = itemWidth * middleIndex;
+  }, [items]);
 
-    const handleScroll = useCallback(() => {
-        const element = wheelRef.current;
-        if (!element) return;
-        const leftPadding = (element.offsetWidth / 2) - (itemWidth / 2);
-        const scrollLeft = element.scrollLeft;
-        const centeredIndex = Math.round((scrollLeft + leftPadding) / itemWidth);
-        const newIndex = Math.max(0, Math.min(maxIndex, centeredIndex));
-        const newValue = min + newIndex * increment;
-        if (newValue !== value) {
-            onChange(newValue);
-            scrollToIndex(newIndex, true);
-        }
-    }, [value, min, increment, maxIndex, onChange, itemWidth, scrollToIndex]);
+  // Infinite scroll logic
+  const handleScroll = () => {
+    const container = containerRef.current;
+    const scrollLeft = container.scrollLeft;
+    const totalWidth = container.scrollWidth;
+    const third = totalWidth / 3;
 
-    const handleItemClick = (index) => {
-        const newValue = min + index * increment;
-        if (newValue !== value) {
-            onChange(newValue);
-            scrollToIndex(index, true);
-        }
-    };
+    if (scrollLeft < third / 2) {
+      container.scrollLeft += third;
+    } else if (scrollLeft > third * 1.5) {
+      container.scrollLeft -= third;
+    }
+  };
 
-    return (
-        <div className="input-group">
-            <label className="input-label">{label}</label>
-            <div className="scroll-container">
-                <div
-                    ref={wheelRef}
-                    className="scroll-wheel-horizontal"
-                    onScroll={handleScroll}
-                >
-                    <div className="scroll-padding-start" style={{ width: `${(itemWidth * visibleItems)/2}px` }} />
-                    {items.map((item, index) => (
-                        <div
-                            key={index}
-                            className={`scroll-item-h ${item === value ? 'active' : ''}`}
-                            style={{ width: itemWidth }}
-                            onClick={() => handleItemClick(index)}
-                        >
-                            <div className="scroll-item-inner">{item}</div>
-                        </div>
-                    ))}
-                    <div className="scroll-padding-end" style={{ width: `${(itemWidth * visibleItems)/2}px` }} />
-                </div>
-            </div>
-        </div>
-    );
-});
+  // Tap selection
+  const handleClick = (item) => {
+    onChange(item);
+  };
+
+  // Detect closest item after scroll stops
+  useEffect(() => {
+    if (!isUserScrolling) return;
+    const timeout = setTimeout(() => {
+      const container = containerRef.current;
+      const center = container.scrollLeft + container.offsetWidth / 2;
+      const itemWidth = container.scrollWidth / circularItems.length;
+      const index = Math.round(center / itemWidth) % items.length;
+      const selectedValue = items[index];
+      if (selectedValue !== undefined) onChange(selectedValue);
+      setIsUserScrolling(false);
+    }, 150);
+    return () => clearTimeout(timeout);
+  }, [isUserScrolling, onChange, circularItems, items]);
+
+  return (
+    <div className="scroll-input">
+      <label className="scroll-label">{label}</label>
+      <div
+        className="scroll-wheel"
+        ref={containerRef}
+        onScroll={() => {
+          setIsUserScrolling(true);
+          handleScroll();
+        }}
+      >
+        {circularItems.map((item, i) => (
+          <div
+            key={i}
+            className={`scroll-item ${item === value ? "active" : ""}`}
+            onClick={() => handleClick(item)}
+          >
+            {item}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 export default HorizontalScrollInput;

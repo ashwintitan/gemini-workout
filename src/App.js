@@ -3,27 +3,30 @@ import HorizontalScrollInput from "./HorizontalScrollInput";
 import "./index.css";
 
 function App() {
-  const [rounds, setRounds] = useState(3);
-  const [workTime, setWorkTime] = useState(30);
-  const [restTime, setRestTime] = useState(15);
+  const [rounds, setRounds] = useState(1);
+  const [workTime, setWorkTime] = useState(10);
+  const [restTime, setRestTime] = useState(5);
   const [started, setStarted] = useState(false);
   const [isWorkPhase, setIsWorkPhase] = useState(true);
   const [currentRound, setCurrentRound] = useState(1);
   const [timeLeft, setTimeLeft] = useState(workTime);
   const timerRef = useRef(null);
 
-  // Beep sound utility
+  // --- BEEP SOUND UTILITY ---
   const playBeep = (frequency = 440, duration = 150, repeat = 1, gap = 100) => {
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
     for (let i = 0; i < repeat; i++) {
-      const oscillator = audioCtx.createOscillator();
-      const gainNode = audioCtx.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(audioCtx.destination);
-      oscillator.type = "sine";
-      oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime + i * (duration + gap) / 1000);
-      oscillator.start(audioCtx.currentTime + i * (duration + gap) / 1000);
-      oscillator.stop(audioCtx.currentTime + i * (duration + gap + duration) / 1000);
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(
+        frequency,
+        ctx.currentTime + i * (duration + gap) / 1000
+      );
+      osc.start(ctx.currentTime + i * (duration + gap) / 1000);
+      osc.stop(ctx.currentTime + i * (duration + gap + duration) / 1000);
     }
   };
 
@@ -32,7 +35,7 @@ function App() {
     setIsWorkPhase(true);
     setCurrentRound(1);
     setTimeLeft(workTime);
-    playBeep(880, 200, 2, 100); // Start cue
+    playBeep(880, 200, 2, 100);
   };
 
   const handleReset = () => {
@@ -41,7 +44,7 @@ function App() {
     setTimeLeft(workTime);
   };
 
-  // Timer logic
+  // --- TIMER LOOP ---
   useEffect(() => {
     if (!started) return;
 
@@ -50,19 +53,18 @@ function App() {
         if (prev <= 1) {
           if (isWorkPhase) {
             setIsWorkPhase(false);
-            playBeep(440, 200, 1); // switch to rest cue
+            playBeep(440, 200, 1);
             return restTime;
           } else {
-            // Rest completed
             if (currentRound >= rounds) {
               clearInterval(timerRef.current);
-              playBeep(880, 150, 3, 100); // final triple beep
+              playBeep(880, 150, 3, 100);
               setStarted(false);
               return workTime;
             } else {
               setIsWorkPhase(true);
               setCurrentRound((r) => r + 1);
-              playBeep(880, 150, 2, 100); // new round cue
+              playBeep(880, 150, 2, 100);
               return workTime;
             }
           }
@@ -74,6 +76,7 @@ function App() {
     return () => clearInterval(timerRef.current);
   }, [started, isWorkPhase, currentRound, rounds, workTime, restTime]);
 
+  // --- SETUP VIEW ---
   if (!started) {
     return (
       <div className="app-container">
@@ -84,14 +87,14 @@ function App() {
             label="Rounds"
             value={rounds}
             min={1}
-            max={30}
+            max={10}
             increment={1}
             onChange={setRounds}
           />
           <HorizontalScrollInput
             label="Work Time (sec)"
             value={workTime}
-            min={5}
+            min={10}
             max={120}
             increment={5}
             onChange={setWorkTime}
@@ -100,7 +103,7 @@ function App() {
             label="Rest Time (sec)"
             value={restTime}
             min={5}
-            max={90}
+            max={120}
             increment={5}
             onChange={setRestTime}
           />
@@ -113,6 +116,7 @@ function App() {
     );
   }
 
+  // --- ACTIVE WORKOUT VIEW ---
   return (
     <div className="app-container workout-view">
       <div className={`countdown-phase ${isWorkPhase ? "phase-work" : "phase-rest"}`}>
